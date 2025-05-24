@@ -56,3 +56,10 @@ iframe {
   max-width: 720px;
   height: 405px;
 }
+
+footer{
+  margin-top: 40px;
+  font-size: 0.9rem;
+  color: #ffffffaa;
+  text-shadow: 1px 1px 4px #00000088;
+}
