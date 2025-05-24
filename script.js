@@ -9,7 +9,9 @@ const Videos = {
   ],
   calm: [
     "https://www.youtube.com/embed/ejvpVhvKesM",   // 3 Daqat
-    "https://www.youtube.com/embed/qFZKK7K52uQ?autoplay=1"    // Lo-fi chill music
+    "https://www.youtube.com/embed/Dy3BHI-niZg"    //kan we kan
+    "https://www.youtube.com/embed/nvr4lPoKqzI"    //kifak enta
+    
   ],
   energetic: [
     "https://www.youtube.com/embed/9bZkp7q19f0?autoplay=1",   // PSY - Gangnam Style
