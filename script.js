@@ -1,3 +1,4 @@
+
 const Videos = {
   happy: [
     "https://www.youtube.com/embed/ZbZSe6N_BXs?autoplay=1",   //  Happy
@@ -9,8 +10,8 @@ const Videos = {
   ],
   calm: [
     "https://www.youtube.com/embed/ejvpVhvKesM",   // 3 Daqat
-    "https://www.youtube.com/embed/Dy3BHI-niZg"    //kan we kan
-    "https://www.youtube.com/embed/nvr4lPoKqzI"    //kifak enta
+    "https://www.youtube.com/embed/Dy3BHI-niZg",    //kan we kan
+    "https://www.youtube.com/embed/nvr4lPoKqzI",    //kifak enta
     
   ],
   energetic: [
