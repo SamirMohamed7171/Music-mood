@@ -1,14 +1,14 @@
 const Videos = {
   happy: [
-    "https://www.youtube.com/embed/ZbZSe6N_BXs?autoplay=1",   // Pharrell Williams - Happy
-    "https://www.youtube.com/embed/OPf0YbXqDm0?autoplay=1"    // Mark Ronson - Uptown Funk
+    "https://www.youtube.com/embed/ZbZSe6N_BXs?autoplay=1",   //  Happy
+    "https://www.youtube.com/embed/OPf0YbXqDm0?autoplay=1"    // Uptown Funk
   ],
   sad: [
-    "https://www.youtube.com/embed/hLQl3WQQoQ0?autoplay=1",   // Adele - Someone Like You
-    "https://www.youtube.com/embed/kXYiU_JCYtU?autoplay=1"    // Linkin Park - Numb
+    "https://www.youtube.com/embed/hLQl3WQQoQ0?autoplay=1",   // Someone Like You
+    "https://www.youtube.com/embed/kXYiU_JCYtU?autoplay=1"    // Numb
   ],
   calm: [
-    "https://www.youtube.com/embed/2OEL4P1Rz04?autoplay=1",   // Peaceful piano music
+    "https://www.youtube.com/embed/ejvpVhvKesM",   // 3 Daqat
     "https://www.youtube.com/embed/qFZKK7K52uQ?autoplay=1"    // Lo-fi chill music
   ],
   energetic: [
