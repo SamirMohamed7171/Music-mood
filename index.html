@@ -6,27 +6,25 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="wrapper">
-    <h1 id="welcome"></h1>
+  <h1 id="welcome"> </h1>
 
-    <div id="mood-buttons">
-      <button onclick="playMoodVideo('happy')">😊 Happy</button>
-      <button onclick="playMoodVideo('sad')">😢 Sad</button>
-      <button onclick="playMoodVideo('calm')">🌙 Calm</button>
-      <button onclick="playMoodVideo('energetic')">⚡ Energetic</button>
-    </div>
-
-    <div id="player-container">
-      <iframe id="yt-player" src="" frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen></iframe>
-    </div>
+  <div id="mood-buttons">
+    <button onclick="playMoodVideo('happy')">😊 Happy</button>
+    <button onclick="playMoodVideo('sad')">😢 Sad</button>
+    <button onclick="playMoodVideo('calm')">🌙 Calm</button>
+    <button onclick="playMoodVideo('energetic')">⚡ Energetic</button>
   </div>
 
-  <footer>
-    <p>&copy; 2025 Samir Mohamed. All rights reserved.</p>
-    <p>Designed and Developed by Samir Mohamed</p>
+  <div id="player-container">
+    <iframe id="yt-player" src="" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen></iframe>
+  </div>
+  <footer style="text-align:center; padding: 20px; background-color: #f1f1f1; color: #333;">
+  <p>&copy; 2025 Samir Mohamed. All rights reserved.</p>
+  <p>Designed and Developed by Samir Mohamed</p>
   </footer>
+
 
   <script src="script.js"></script>
 </body>
