@@ -1,3 +1,4 @@
+/* Fix white background on scroll and allow full layout control */
 html, body {
   margin: 0;
   padding: 0;
@@ -16,6 +17,15 @@ html, body {
 @keyframes backgroundShift {
   0% { background-position: 0% 50%; }
   100% { background-position: 100% 50%; }
+}
+
+/* Wrapper pushes footer down */
+.wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 20px;
 }
 
 h1 {
@@ -60,14 +70,10 @@ iframe {
   height: 405px;
 }
 
-.wrapper {
-  flex: 1;
-  padding: 20px;
-}
-
+/* Better footer: smaller, always at bottom */
 footer {
-  font-size: 0.75rem;
-  padding: 10px 0;
-  color: #ffffff99;
-  text-shadow: 1px 1px 3px #00000088;
+  font-size: 0.7rem;
+  padding: 12px 0;
+  color: #ffffffaa;
+  text-shadow: 1px 1px 4px #00000088;
 }
