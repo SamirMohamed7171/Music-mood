@@ -2,31 +2,482 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Mood-Based Video Player</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moodwave</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --happy:    #f59e0b;
+      --sad:      #818cf8;
+      --calm:     #34d399;
+      --energetic:#f87171;
+      --bg:       #080810;
+      --surface:  #0f0f1a;
+      --card:     #14141f;
+      --border:   rgba(255,255,255,0.07);
+      --text:     #f1f0f5;
+      --muted:    rgba(241,240,245,0.45);
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Ambient orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.18;
+      pointer-events: none;
+      z-index: 0;
+      transition: background 1.2s ease;
+    }
+    .orb-1 { width: 600px; height: 600px; top: -200px; left: -150px; background: #6366f1; }
+    .orb-2 { width: 500px; height: 500px; bottom: -150px; right: -100px; background: #10b981; }
+    .orb-3 { width: 400px; height: 400px; top: 40%; left: 50%; transform: translate(-50%,-50%); background: #f59e0b; opacity: 0.08; }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 24px 40px;
+    }
+
+    /* Header */
+    header { text-align: center; margin-bottom: 64px; }
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.8rem, 7vw, 4.4rem);
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.5) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+    .logo span { -webkit-text-fill-color: transparent; }
+    .tagline {
+      font-size: 1rem;
+      color: var(--muted);
+      font-weight: 300;
+      letter-spacing: 0.02em;
+    }
+
+    /* Mood grid */
+    .mood-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    @media (max-width: 520px) { .mood-grid { grid-template-columns: 1fr; } }
+
+    .mood-card {
+      position: relative;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      user-select: none;
+    }
+    .mood-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .mood-card:hover { transform: translateY(-4px); }
+    .mood-card:active { transform: translateY(-2px) scale(0.99); }
+    .mood-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 8px 32px rgba(0,0,0,0.5); }
+    .mood-card.active::before { opacity: 0.06; background: var(--accent); }
+
+    .mood-card[data-mood="happy"]     { --accent: var(--happy); }
+    .mood-card[data-mood="sad"]       { --accent: var(--sad); }
+    .mood-card[data-mood="calm"]      { --accent: var(--calm); }
+    .mood-card[data-mood="energetic"] { --accent: var(--energetic); }
+
+    .mood-card:hover { border-color: rgba(255,255,255,0.15); }
+    .mood-card.active:hover { border-color: var(--accent); }
+
+    .mood-glow {
+      position: absolute;
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      top: -60px; right: -60px;
+      filter: blur(60px);
+      opacity: 0.25;
+      background: var(--accent);
+      transition: opacity 0.3s;
+    }
+    .mood-card:hover .mood-glow, .mood-card.active .mood-glow { opacity: 0.4; }
+
+    .mood-icon {
+      font-size: 2.4rem;
+      margin-bottom: 14px;
+      display: block;
+      line-height: 1;
+    }
+    .mood-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.35rem;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .mood-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 300;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .mood-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--accent);
+      background: rgba(255,255,255,0.05);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* Player */
+    .player-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px;
+      margin-bottom: 48px;
+      display: none;
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .player-section.visible { display: block; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .now-playing-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .now-playing-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .playing-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--active-accent, #34d399);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    .mood-badge {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--active-accent, #34d399);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    .video-wrapper {
+      position: relative;
+      padding-top: 56.25%;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #000;
+      margin-bottom: 20px;
+    }
+    .video-wrapper iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .song-info { margin-bottom: 20px; }
+    .song-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .song-artist {
+      font-size: 0.88rem;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    .player-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+    }
+    .btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--active-accent, #34d399);
+      color: #080810;
+      border-color: transparent;
+    }
+    .btn-primary:hover { filter: brightness(1.1); }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 24px 0;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 300;
+    }
+  </style>
 </head>
 <body>
-  <h1 id="welcome"> </h1>
 
-  <div id="mood-buttons">
-    <button onclick="playMoodVideo('happy')">😊 Happy</button>
-    <button onclick="playMoodVideo('sad')">😢 Sad</button>
-    <button onclick="playMoodVideo('calm')">🌙 Calm</button>
-    <button onclick="playMoodVideo('energetic')">⚡ Energetic</button>
-  </div>
-  <div id="mood-videos-container"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
 
-  <div id="player-container">
-    <iframe id="yt-player" src="" frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen></iframe>
+<div class="page">
+
+  <header>
+    <h1 class="logo">Moodwave</h1>
+    <p class="tagline">Pick your vibe — let the music find you.</p>
+  </header>
+
+  <div class="mood-grid">
+    <div class="mood-card" data-mood="happy">
+      <div class="mood-glow"></div>
+      <span class="mood-icon">☀️</span>
+      <div class="mood-name">Happy</div>
+      <div class="mood-desc">Feel-good hits to keep the energy up.</div>
+      <span class="mood-count">▶ 8 songs</span>
+    </div>
+    <div class="mood-card" data-mood="sad">
+      <div class="mood-glow"></div>
+      <span class="mood-icon">🌧️</span>
+      <div class="mood-name">Sad</div>
+      <div class="mood-desc">Let it all out — emotional anthems.</div>
+      <span class="mood-count">▶ 7 songs</span>
+    </div>
+    <div class="mood-card" data-mood="calm">
+      <div class="mood-glow"></div>
+      <span class="mood-icon">🌿</span>
+      <div class="mood-name">Calm</div>
+      <div class="mood-desc">Slow down, breathe, and drift away.</div>
+      <span class="mood-count">▶ 7 songs</span>
+    </div>
+    <div class="mood-card" data-mood="energetic">
+      <div class="mood-glow"></div>
+      <span class="mood-icon">⚡</span>
+      <div class="mood-name">Energetic</div>
+      <div class="mood-desc">High-octane tracks to get you moving.</div>
+      <span class="mood-count">▶ 7 songs</span>
+    </div>
   </div>
-  <footer style="text-align:center; padding: 20px; background-color: #f1f1f1; color: #333;">
-  <p>&copy; 2025 Samir Mohamed. All rights reserved.</p>
-  <p>Designed and Developed by Samir Mohamed</p>
+
+  <div class="player-section" id="player">
+    <div class="now-playing-header">
+      <div class="now-playing-label">
+        <span class="playing-dot"></span>
+        Now Playing
+      </div>
+      <span class="mood-badge" id="mood-badge">Happy</span>
+    </div>
+    <div class="video-wrapper">
+      <iframe id="yt-player" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <div class="song-info">
+      <div class="song-title" id="song-title">—</div>
+      <div class="song-artist" id="song-artist">—</div>
+    </div>
+    <div class="player-controls">
+      <button class="btn btn-primary" id="btn-next">🔀 Next Song</button>
+      <button class="btn" id="btn-change">🎭 Change Mood</button>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Samir Mohamed · All rights reserved</p>
   </footer>
 
+</div>
 
-  <script src="script.js"></script>
+<script>
+const moods = {
+  happy: {
+    label: 'Happy ☀️',
+    accentVar: '--happy',
+    accent: '#f59e0b',
+    orbColors: ['#f59e0b','#f97316'],
+    songs: [
+      { title: 'Happy',                 artist: 'Pharrell Williams',          id: 'ZbZSe6N_BXs' },
+      { title: 'Uptown Funk',            artist: 'Mark Ronson ft. Bruno Mars', id: 'OPf0YbXqDm0' },
+      { title: "Can't Stop the Feeling", artist: 'Justin Timberlake',          id: 'ru0K8uYEZWw' },
+      { title: 'Blinding Lights',        artist: 'The Weeknd',                 id: '4NRXx6U8ABQ' },
+      { title: 'Akhasmak Ah',            artist: 'Nancy Ajram',                id: 'qLwpSPtLFSo' },
+      { title: 'Tamally Maak',           artist: 'Amr Diab',                   id: 'P_ReBW_TIVA' },
+      { title: 'Ana Masry',              artist: 'Tamer Hosny',                id: 'JRkuMNJlStg' },
+      { title: 'Wayah',                  artist: 'Wegz',                       id: 'FYpTXF8d_T4' },
+    ]
+  },
+  sad: {
+    label: 'Sad 🌧️',
+    accentVar: '--sad',
+    accent: '#818cf8',
+    orbColors: ['#6366f1','#8b5cf6'],
+    songs: [
+      { title: 'Someone Like You',  artist: 'Adele',              id: 'hLQl3WQQoQ0' },
+      { title: 'Numb',              artist: 'Linkin Park',         id: 'kXYiU_JCYtU' },
+      { title: 'The Night We Met',  artist: 'Lord Huron',          id: 'KtlgYxa6BMU' },
+      { title: 'Let Her Go',        artist: 'Passenger',           id: 'RBumgq5yVrA' },
+      { title: 'Wala Ala Balo',     artist: 'Amr Diab',            id: 'qdm3Cd1j3XA' },
+      { title: 'Batwanes Beek',     artist: 'Warda Al-Jazairia',   id: 'ZWNF9kpDxdA' },
+      { title: 'La Tebky',          artist: 'Kadim Al Saher',      id: 'l-sI16PBKUE' },
+    ]
+  },
+  calm: {
+    label: 'Calm 🌿',
+    accentVar: '--calm',
+    accent: '#34d399',
+    orbColors: ['#10b981','#0ea5e9'],
+    songs: [
+      { title: '3 Daqat',           artist: 'Abu Ftayyim ft. Um Fahad', id: 'ejvpVhvKesM' },
+      { title: 'Kan We Kan',        artist: 'Assala',                   id: 'Dy3BHI-niZg' },
+      { title: 'Kifak Enta',        artist: 'Fairuz',                   id: 'nvr4lPoKqzI' },
+      { title: 'Sunset Lover',      artist: 'Petit Biscuit',            id: 'krGgGVBGNSk' },
+      { title: 'Clair de Lune',     artist: 'Debussy (Piano Cover)',    id: 'CvFH_6DNRCY' },
+      { title: 'Mashrou3 Leila',    artist: 'Raksit Leila',             id: 'DG0ocGTsO3s' },
+      { title: 'Aalb Mtl Ma Howa',  artist: 'Abdel Halim Hafez',        id: 'oKxCUjnrKYI' },
+    ]
+  },
+  energetic: {
+    label: 'Energetic ⚡',
+    accentVar: '--energetic',
+    accent: '#f87171',
+    orbColors: ['#ef4444','#f97316'],
+    songs: [
+      { title: 'Gangnam Style',     artist: 'PSY',               id: '9bZkp7q19f0' },
+      { title: 'POWER',             artist: 'Kanye West',         id: 'L53gjP-TtGE' },
+      { title: 'Bleed It Out',      artist: 'Linkin Park',        id: 'sLfbRKcnAJ4' },
+      { title: 'El Bakht',          artist: 'Wegz',               id: '1h5h-lMWCJQ' },
+      { title: 'Elly Yehebak',      artist: 'Mohamed Ramadan',    id: 'fVEAnMz9Y6o' },
+      { title: 'Kalam',             artist: 'Marwan Pablo',       id: 'M5qBEBjxGPY' },
+      { title: 'Eye of the Tiger',  artist: 'Survivor',           id: 'btPJPFnesV4' },
+    ]
+  }
+};
+
+let currentMood = null;
+let currentIndex = -1;
+
+const playerSection = document.getElementById('player');
+const ytPlayer     = document.getElementById('yt-player');
+const songTitle    = document.getElementById('song-title');
+const songArtist   = document.getElementById('song-artist');
+const moodBadge    = document.getElementById('mood-badge');
+const orb1 = document.querySelector('.orb-1');
+const orb2 = document.querySelector('.orb-2');
+
+function playRandom(mood, forceNew = false) {
+  const data = moods[mood];
+  let idx;
+  do { idx = Math.floor(Math.random() * data.songs.length); }
+  while (data.songs.length > 1 && idx === currentIndex && forceNew);
+
+  currentIndex = idx;
+  const song = data.songs[idx];
+
+  ytPlayer.src = `https://www.youtube.com/embed/${song.id}?autoplay=1&rel=0`;
+  songTitle.textContent  = song.title;
+  songArtist.textContent = song.artist;
+  moodBadge.textContent  = data.label;
+
+  document.documentElement.style.setProperty('--active-accent', data.accent);
+  orb1.style.background = data.orbColors[0];
+  orb2.style.background = data.orbColors[1];
+
+  playerSection.classList.add('visible');
+  playerSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+document.querySelectorAll('.mood-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const mood = card.dataset.mood;
+    document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    currentMood = mood;
+    currentIndex = -1;
+    playRandom(mood);
+  });
+});
+
+document.getElementById('btn-next').addEventListener('click', () => {
+  if (currentMood) playRandom(currentMood, true);
+});
+
+document.getElementById('btn-change').addEventListener('click', () => {
+  ytPlayer.src = '';
+  playerSection.classList.remove('visible');
+  document.querySelectorAll('.mood-card').forEach(c => c.classList.remove('active'));
+  currentMood = null;
+  currentIndex = -1;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+</script>
+
 </body>
 </html>
